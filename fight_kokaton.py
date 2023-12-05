@@ -138,12 +138,28 @@ class Beam:
         screen.blit(self.img, self.rct)
 
 
+class Explosion:
+    """
+    爆弾を破壊した時の処理
+    """
+    def __init__(self,bomb:Bomb):
+        img = pg.image.load(f"{MAIN_DIR}/fig/explosion.gif")
+        self.imgs = [pg.transform.flip(img,True,True),img]
+        self.pos = bomb.rct.center
+        self.life = 30
+    
+    def update(self,screen):
+        self.life -= 1
+        screen.blit(self.imgs[self.life%2], self.pos)
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load(f"{MAIN_DIR}/fig/pg_bg.jpg")
     bird = Bird(3, (900, 400))
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
+    exp_lst = []
     beam = None
     clock = pg.time.Clock()
     tmr = 0
@@ -165,13 +181,18 @@ def main():
         
             if beam is not None and beam.rct.colliderect(bomb.rct):
                 bird.change_img(6,screen)
+                exp_lst.append(Explosion(bomb))
                 beam = None
                 bombs[i] = None
         
-        # BombsからNoneを取り除く
+        # bombsからNoneを取り除く
         bombs = [bomb for bomb in bombs if bomb is not None]
+        # exp_lstからlife<0を取り除く
+        exp_lst = [ex for ex in exp_lst if ex.life > 0]
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
+        for ex in exp_lst:
+            ex.update(screen)
         for bomb in bombs:
             bomb.update(screen)
         if beam is not None:
