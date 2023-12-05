@@ -1,3 +1,4 @@
+import math
 import os
 import random
 import sys
@@ -55,6 +56,7 @@ class Bird:
             (0, +5): pg.transform.rotozoom(img, -90, 1.0),  # 下
             (+5, +5): pg.transform.rotozoom(img, -45, 1.0)  # 右下
         }
+        self.dire = (5,0)
         self.img = self.imgs[5,0]  # 右向きを初期状態にする 
         self.rct = self.img.get_rect()
         self.rct.center = xy
@@ -71,6 +73,7 @@ class Bird:
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
         押下キーに応じてこうかとんを移動させる
+        ビームの向きを変更する
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
         """
@@ -84,6 +87,7 @@ class Bird:
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if sum_mv != [0,0]:  # Keyが押されていたら
             self.img = self.imgs[tuple(sum_mv)]
+            self.dire = tuple(sum_mv)  # ビームの向き更新
         screen.blit(self.img, self.rct)
 
 
@@ -126,8 +130,13 @@ class Beam:
         self.img = pg.image.load(f"{MAIN_DIR}/fig/beam.png")
         self.rct = self.img.get_rect()
         self.rct.center = bird.rct.center # こうかとんの座標をもとに初期座標決定 
-        self.rct.centerx += bird.rct.width/2
-        self.vx ,self.vy = 5,0
+        self.vx ,self.vy = bird.dire
+        self.rct.centerx += bird.rct.width*self.vx/5
+        self.rct.centery += bird.rct.height*self.vy/5
+        
+        ang = math.degrees(math.atan2(-self.vy,self.vx))  # 発射速度
+        self.img = pg.transform.rotozoom(self.img,ang,1.0)
+
     
     def update(self, screen: pg.Surface):
         """
@@ -158,7 +167,8 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load(f"{MAIN_DIR}/fig/pg_bg.jpg")
     bird = Bird(3, (900, 400))
-    bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
+    #bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
+    bombs = []
     exp_lst = []
     beam = None
     clock = pg.time.Clock()
