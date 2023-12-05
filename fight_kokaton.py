@@ -184,9 +184,8 @@ def main():
     bg_img = pg.image.load(f"{MAIN_DIR}/fig/pg_bg.jpg")
     bird = Bird(3, (900, 400))
     bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
-    #bombs = []
+    beams = []
     exp_lst = []
-    beam = None
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
@@ -195,7 +194,7 @@ def main():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:  # SPACE押下 
-                beam = Beam(bird)  # BeamInstance生成 
+                beams.append(Beam(bird)) # BeamInstance生成,listに追加 
         screen.blit(bg_img, [0, 0])
         
         for i,bomb in enumerate(bombs):
@@ -206,24 +205,33 @@ def main():
                 time.sleep(1)
                 return
         
-            if beam is not None and beam.rct.colliderect(bomb.rct):
-                bird.change_img(6,screen)
-                exp_lst.append(Explosion(bomb))
-                beam = None
-                bombs[i] = None
-                score.score += 1  # score増加 
+            for j,beam in enumerate(beams):
+                if beam is not None:
+                    if beam.rct.colliderect(bomb.rct):
+                        bird.change_img(6,screen)
+                        exp_lst.append(Explosion(bomb))
+                        beam = None
+                        bombs[i] = None
+                        beams[j] = None
+                        score.score += 1  # score増加 
+                    elif beam.rct.x > WIDTH:  #画面外に出たらNone
+                        beams[j] = None
+                    elif beam.rct.y > HEIGHT:
+                        beams[j] = None
         
         # bombsからNoneを取り除く
         bombs = [bomb for bomb in bombs if bomb is not None]
         # exp_lstからlife<0を取り除く
         exp_lst = [ex for ex in exp_lst if ex.life > 0]
+        # beamsからNoneを取り除く
+        beams = [beam for beam in beams if beam  is not None]
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         for ex in exp_lst:
             ex.update(screen)
         for bomb in bombs:
             bomb.update(screen)
-        if beam is not None:
+        for beam in beams:
             beam.update(screen)
         score.update(screen)
         pg.display.update()
