@@ -162,15 +162,32 @@ class Explosion:
         screen.blit(self.imgs[self.life%2], self.pos)
 
 
+class Score:
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.color = (0, 0, 255)
+        self.score = 0
+        self.img = self.font.render(f"Score:{self.score}", 0, self.color)
+        self.rct = self.img.get_rect()
+        self.rct.x = 100
+        self.rct.y = HEIGHT - 50
+    
+    def update(self, screen):
+        self.img = self.font.render(f"Score:{self.score}", 0, self.color)
+        screen.blit(self.img, self.rct)
+
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load(f"{MAIN_DIR}/fig/pg_bg.jpg")
     bird = Bird(3, (900, 400))
-    #bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
-    bombs = []
+    bombs = [Bomb() for _ in range(NUM_OF_BOMBS)]
+    #bombs = []
     exp_lst = []
     beam = None
+    score = Score()
     clock = pg.time.Clock()
     tmr = 0
     while True:
@@ -194,6 +211,7 @@ def main():
                 exp_lst.append(Explosion(bomb))
                 beam = None
                 bombs[i] = None
+                score.score += 1  # score増加 
         
         # bombsからNoneを取り除く
         bombs = [bomb for bomb in bombs if bomb is not None]
@@ -207,6 +225,7 @@ def main():
             bomb.update(screen)
         if beam is not None:
             beam.update(screen)
+        score.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
